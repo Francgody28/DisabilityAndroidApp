@@ -1,0 +1,10 @@
+<resources>
+    <!-- Define all color resources used in your project -->
+    <color name="primary">#1976D2</color> <!-- main app color -->
+    <color name="accent">#64B5F6</color>  <!-- accent color -->
+    <color name="primaryColor">#1976D2</color> <!-- used for UI -->
+    <color name="accentColor">#64B5F6</color>
+    <color name="white">#FFFFFF</color>
+    <color name="black">#000000</color>
+    <color name="bgColor">#F3F4F6</color>
+</resources>
