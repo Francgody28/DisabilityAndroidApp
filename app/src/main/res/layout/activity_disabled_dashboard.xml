@@ -1,29 +1,126 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
+<ScrollView
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="24dp"
-    android:orientation="vertical"
-    android:gravity="center"
     android:background="@color/bgColor">
 
-    <TextView
-        android:id="@+id/disabledWelcome"
-        android:text="Welcome User"
-        android:textSize="24sp"
-        android:textColor="@color/primaryColor"
-        android:fontFamily="sans-serif-medium"
-        android:layout_gravity="center"
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_width="wrap_content"/>
-    <Button
-        android:id="@+id/logoutBtn"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Logout"
-        android:textColor="@android:color/white"
-        android:backgroundTint="@color/primaryColor"
-        android:layout_marginTop="24dp"/>
+        android:padding="24dp"
+        android:orientation="vertical">
 
-</LinearLayout>
+        <!-- Welcome Message -->
+        <TextView
+            android:id="@+id/disabledWelcome"
+            android:text="Welcome User"
+            android:textSize="24sp"
+            android:textColor="@color/primaryColor"
+            android:fontFamily="sans-serif-medium"
+            android:layout_gravity="center"
+            android:layout_marginBottom="24dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <!-- Doctor Selection Section -->
+        <LinearLayout
+            android:id="@+id/doctorSelectionSection"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <!-- Doctor Selection Title -->
+            <TextView
+                android:text="Select a Doctor:"
+                android:textSize="16sp"
+                android:textColor="@color/black"
+                android:layout_marginBottom="8dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+
+            <!-- Doctor Dropdown -->
+            <Spinner
+                android:id="@+id/doctorSpinner"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
+            <!-- Assign Doctor Button -->
+            <Button
+                android:id="@+id/assignDoctorBtn"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Assign Doctor"
+                android:textColor="@android:color/white"
+                android:backgroundTint="@color/primaryColor"
+                android:layout_marginTop="16dp" />
+        </LinearLayout>
+
+        <!-- Assigned Doctor Info Section (Initially Hidden) -->
+        <LinearLayout
+            android:id="@+id/doctorInfoSection"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:visibility="gone"
+            android:layout_marginTop="20dp">
+
+            <TextView
+                android:id="@+id/doctorDetails"
+                android:text="Your doctor is Dr. Kelvin (Cardiologist)"
+                android:textSize="16sp"
+                android:textColor="@color/primaryColor"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+        </LinearLayout>
+
+        <!-- Condition Selector (Initially Hidden) -->
+        <RadioGroup
+            android:id="@+id/conditionGroup"
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            android:layout_marginTop="24dp">
+
+            <RadioButton
+                android:id="@+id/goodRadio"
+                android:text="Good"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+
+            <RadioButton
+                android:id="@+id/normalRadio"
+                android:text="Normal"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+
+            <RadioButton
+                android:id="@+id/badRadio"
+                android:text="Bad"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+        </RadioGroup>
+
+        <!-- Send Alert Button (Initially Hidden) -->
+        <Button
+            android:id="@+id/sendAlertBtn"
+            android:text="Send Alert to Doctor"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:backgroundTint="@color/errorColor"
+            android:textColor="@android:color/white"
+            android:layout_marginTop="10dp"
+            android:visibility="gone" />
+
+        <!-- Logout Button -->
+        <Button
+            android:id="@+id/logoutBtn"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Logout"
+            android:textColor="@android:color/white"
+            android:backgroundTint="@color/primaryColor"
+            android:layout_marginTop="24dp" />
+    </LinearLayout>
+</ScrollView>

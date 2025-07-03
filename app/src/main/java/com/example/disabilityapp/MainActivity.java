@@ -58,6 +58,7 @@ public class MainActivity extends AppCompatActivity {
                 }
 
                 intent.putExtra("firstName", firstName);
+                intent.putExtra("email", userEmail);
                 startActivity(intent);
                 finish();  // Optional: finish login activity
 
