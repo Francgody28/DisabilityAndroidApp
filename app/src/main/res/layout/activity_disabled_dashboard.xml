@@ -16,7 +16,7 @@
             android:id="@+id/disabledWelcome"
             android:text="Welcome User"
             android:textSize="24sp"
-            android:textColor="@color/primaryColor"
+            android:textColor="@color/black"
             android:fontFamily="sans-serif-medium"
             android:layout_gravity="center"
             android:layout_marginBottom="24dp"

@@ -17,7 +17,7 @@ public class DoctorDashboardActivity extends AppCompatActivity {
 
     TextView doctorWelcome;
     ListView patientListView, alertListView;
-    Button logoutBtn;
+    Button logoutBtn, viewAlertsBtn;
     DatabaseHelper db;
     String doctorEmail;
 
@@ -31,6 +31,7 @@ public class DoctorDashboardActivity extends AppCompatActivity {
         patientListView = findViewById(R.id.patientListView);
         alertListView = findViewById(R.id.alertListView);
         logoutBtn = findViewById(R.id.logoutBtn);
+        viewAlertsBtn = findViewById(R.id.viewAlertsBtn);
         db = new DatabaseHelper(this);
 
         // Get doctor data from Intent
@@ -64,10 +65,17 @@ public class DoctorDashboardActivity extends AppCompatActivity {
             Toast.makeText(this, "No alerts yet", Toast.LENGTH_SHORT).show();
         }
 
-        // Logout logic
+        // 🔹 View Full Alert List
+        viewAlertsBtn.setOnClickListener(v -> {
+            Intent intent = new Intent(DoctorDashboardActivity.this, DoctorAlertsActivity.class);
+            intent.putExtra("email", doctorEmail);
+            startActivity(intent);
+        });
+
+        // 🔸 Logout
         logoutBtn.setOnClickListener(v -> {
             Intent intent = new Intent(DoctorDashboardActivity.this, MainActivity.class);
-            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK); // clear back stack
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
             startActivity(intent);
             finish();
         });

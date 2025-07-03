@@ -22,6 +22,7 @@
         android:id="@+id/email"
         android:hint="Email"
         android:inputType="textEmailAddress"
+        android:textColor="@color/black"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"/>
 
@@ -29,6 +30,7 @@
         android:id="@+id/password"
         android:hint="Password"
         android:inputType="textPassword"
+        android:textColor="@color/black"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"/>
 

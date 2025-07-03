@@ -1,17 +1,25 @@
 package com.example.disabilityapp;
 
+import android.Manifest;
+import android.annotation.SuppressLint;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.location.Location;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationServices;
 
 import java.util.List;
 
@@ -24,6 +32,13 @@ public class DisabledDashboardActivity extends AppCompatActivity {
     View doctorSelectionSection, doctorInfoSection;
     DatabaseHelper db;
     String userEmail;  // Logged-in user's email
+
+    // Location
+    private FusedLocationProviderClient fusedLocationClient;
+    private double latitude = 0.0;
+    private double longitude = 0.0;
+
+    private static final int LOCATION_PERMISSION_REQUEST_CODE = 1000;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,6 +58,10 @@ public class DisabledDashboardActivity extends AppCompatActivity {
 
         db = new DatabaseHelper(this);
 
+        // Location client init
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+        checkLocationPermission();
+
         // Get user data from Intent
         String firstName = getIntent().getStringExtra("firstName");
         userEmail = getIntent().getStringExtra("email"); // Passed from login
@@ -54,41 +73,39 @@ public class DisabledDashboardActivity extends AppCompatActivity {
         String[] doctorInfo = db.getAssignedDoctorDetails(userEmail);
 
         if (doctorInfo != null) {
-            // Doctor already assigned — hide selection, show doctor info and condition options
+            // Doctor assigned — hide selection, show info & condition options
             doctorSelectionSection.setVisibility(View.GONE);
             doctorInfoSection.setVisibility(View.VISIBLE);
             conditionGroup.setVisibility(View.VISIBLE);
             doctorDetails.setText("Your doctor is Dr. " + doctorInfo[0] + " (" + doctorInfo[1] + ")");
         } else {
-            // Load list of doctors only if no doctor assigned
+            // Load doctors list if no doctor assigned
             List<String> doctorList = db.getAllDoctors();
             ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, doctorList);
             adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
             doctorSpinner.setAdapter(adapter);
 
-            // Doctor info and condition group are hidden by default
             doctorInfoSection.setVisibility(View.GONE);
             conditionGroup.setVisibility(View.GONE);
             sendAlertBtn.setVisibility(View.GONE);
         }
 
-        // Assign doctor button logic
+        // Assign doctor button
         assignDoctorBtn.setOnClickListener(v -> {
             String selected = (String) doctorSpinner.getSelectedItem();
             if (selected != null) {
-                String doctorEmail = selected.substring(selected.indexOf("(") + 1, selected.indexOf(")")); // extract email
+                String doctorEmail = selected.substring(selected.indexOf("(") + 1, selected.indexOf(")")); // Extract email
                 boolean success = db.assignDoctorToDisabled(userEmail, doctorEmail);
                 if (success) {
                     Toast.makeText(this, "Doctor Assigned Successfully", Toast.LENGTH_SHORT).show();
-                    // Refresh activity to update UI
-                    recreate();
+                    recreate(); // Refresh UI
                 } else {
                     Toast.makeText(this, "Assignment Failed", Toast.LENGTH_SHORT).show();
                 }
             }
         });
 
-        // Condition selection changes
+        // Condition selection change
         conditionGroup.setOnCheckedChangeListener((group, checkedId) -> {
             if (checkedId == R.id.badRadio) {
                 sendAlertBtn.setVisibility(View.VISIBLE);
@@ -97,13 +114,13 @@ public class DisabledDashboardActivity extends AppCompatActivity {
             }
         });
 
-        // Send alert button logic
+        // Send alert button
         sendAlertBtn.setOnClickListener(v -> {
             String doctorEmail = db.getAssignedDoctorEmail(userEmail);
             if (doctorEmail != null) {
-                boolean alertInserted = db.insertAlert(userEmail, doctorEmail, "Bad");
+                boolean alertInserted = db.insertAlert(userEmail, doctorEmail, "Bad", latitude, longitude);
                 if (alertInserted) {
-                    Toast.makeText(this, "Alert sent to Doctor", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, "Alert with location sent to Doctor", Toast.LENGTH_SHORT).show();
                 } else {
                     Toast.makeText(this, "Failed to send alert", Toast.LENGTH_SHORT).show();
                 }
@@ -112,12 +129,50 @@ public class DisabledDashboardActivity extends AppCompatActivity {
             }
         });
 
-        // Logout button logic
+        // Logout button
         logoutBtn.setOnClickListener(v -> {
             Intent intent = new Intent(DisabledDashboardActivity.this, MainActivity.class);
-            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK); // Clear back stack
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
             startActivity(intent);
             finish();
         });
+    }
+
+    private void checkLocationPermission() {
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+                ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION},
+                    LOCATION_PERMISSION_REQUEST_CODE);
+        } else {
+            getLastLocation();
+        }
+    }
+
+    @SuppressLint("MissingPermission")
+    private void getLastLocation() {
+        fusedLocationClient.getLastLocation()
+                .addOnSuccessListener(this, location -> {
+                    if (location != null) {
+                        latitude = location.getLatitude();
+                        longitude = location.getLongitude();
+                    }
+                });
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode,
+                                           @NonNull String[] permissions,
+                                           @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == LOCATION_PERMISSION_REQUEST_CODE) {
+            if (grantResults.length > 0
+                    && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                getLastLocation();
+            } else {
+                Toast.makeText(this, "Location permission denied", Toast.LENGTH_SHORT).show();
+            }
+        }
     }
 }

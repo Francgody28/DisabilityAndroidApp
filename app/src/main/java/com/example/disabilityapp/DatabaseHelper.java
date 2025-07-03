@@ -13,7 +13,7 @@ import java.util.List;
 public class DatabaseHelper extends SQLiteOpenHelper {
 
     private static final String DB_NAME = "disability.db";
-    private static final int DB_VERSION = 4;  // incremented for alerts table addition
+    private static final int DB_VERSION = 5;  // Incremented for location fields in alerts
 
     public DatabaseHelper(Context context) {
         super(context, DB_NAME, null, DB_VERSION);
@@ -37,12 +37,14 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 "assignedDoctorEmail TEXT)";    // only for disabled users
         db.execSQL(createUsersTable);
 
-        // Create alerts table for condition alerts from disabled users
+        // Create alerts table with location columns and timestamp
         String createAlertsTable = "CREATE TABLE alerts (" +
                 "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
                 "disabledEmail TEXT, " +
                 "doctorEmail TEXT, " +
                 "condition TEXT, " +
+                "latitude REAL, " +             // New latitude column
+                "longitude REAL, " +            // New longitude column
                 "timestamp DATETIME DEFAULT CURRENT_TIMESTAMP)";
         db.execSQL(createAlertsTable);
     }
@@ -196,13 +198,16 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return null;
     }
 
-    // Insert alert (disabled user reports condition)
-    public boolean insertAlert(String disabledEmail, String doctorEmail, String condition) {
+    // Insert alert with location (disabled user reports condition)
+    public boolean insertAlert(String disabledEmail, String doctorEmail, String condition,
+                               double latitude, double longitude) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues cv = new ContentValues();
         cv.put("disabledEmail", disabledEmail);
         cv.put("doctorEmail", doctorEmail);
         cv.put("condition", condition);
+        cv.put("latitude", latitude);
+        cv.put("longitude", longitude);
 
         long result = db.insert("alerts", null, cv);
         if (result == -1) {
@@ -212,12 +217,12 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return true;
     }
 
-    // Get alerts for doctor
+    // Get alerts as formatted strings for doctor (with location info)
     public List<String> getAlertsForDoctor(String doctorEmail) {
         List<String> alerts = new ArrayList<>();
         SQLiteDatabase db = this.getReadableDatabase();
         Cursor cursor = db.rawQuery(
-                "SELECT u.fname, a.condition, a.timestamp " +
+                "SELECT u.fname, a.condition, a.latitude, a.longitude, a.timestamp " +
                         "FROM alerts a JOIN users u ON a.disabledEmail = u.email " +
                         "WHERE a.doctorEmail = ? ORDER BY a.timestamp DESC",
                 new String[]{doctorEmail});
@@ -225,8 +230,39 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         while (cursor.moveToNext()) {
             String patientName = cursor.getString(0);
             String condition = cursor.getString(1);
-            String timestamp = cursor.getString(2);
-            alerts.add(patientName + " reported \"" + condition + "\" at " + timestamp);
+            double lat = cursor.getDouble(2);
+            double lon = cursor.getDouble(3);
+            String timestamp = cursor.getString(4);
+
+            alerts.add(patientName + " reported \"" + condition + "\" at " + timestamp +
+                    " (Location: " + lat + ", " + lon + ")");
+        }
+        cursor.close();
+        return alerts;
+    }
+
+    // New method: Get alerts as Alert objects (your requested method)
+    public List<Alert> getAlertsForDoctorDetailed(String doctorEmail) {
+        List<Alert> alerts = new ArrayList<>();
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        String query = "SELECT a.id, a.condition, a.latitude, a.longitude, u.fname, u.lname, a.disabledEmail, a.doctorEmail " +
+                "FROM alerts a JOIN users u ON a.disabledEmail = u.email " +
+                "WHERE a.doctorEmail = ? ORDER BY a.id DESC";
+
+        Cursor cursor = db.rawQuery(query, new String[]{doctorEmail});
+
+        while (cursor.moveToNext()) {
+            Alert alert = new Alert();
+            alert.id = cursor.getInt(0);
+            alert.condition = cursor.getString(1);
+            alert.latitude = cursor.getDouble(2);
+            alert.longitude = cursor.getDouble(3);
+            alert.patientFirstName = cursor.getString(4);
+            alert.patientLastName = cursor.getString(5);
+            alert.disabledEmail = cursor.getString(6);
+            alert.doctorEmail = cursor.getString(7);
+            alerts.add(alert);
         }
         cursor.close();
         return alerts;
